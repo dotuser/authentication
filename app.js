@@ -2,28 +2,27 @@ const express = require("express");
 const bodyParser = require("body-parser");
 const mongoose = require("mongoose");
 const encrypt = require("mongoose-encryption");
+const env = require("dotenv");
 
 const app = express();
-const PORT = 3000;
+env.config();
 
 app.set("view engine", "ejs");
 
 app.use(express.static("public"));
 app.use(bodyParser.urlencoded({ extended: true }));
 
-const uri =
-  "mongodb+srv://hassan:Testing123@generalpurpose.bxoapvc.mongodb.net/authDB?retryWrites=true&w=majority";
-
-mongoose.connect(uri, { useNewUrlParser: true });
+mongoose.connect(process.env.URI, { useNewUrlParser: true });
 
 const userSchema = new mongoose.Schema({
   email: String,
   password: String,
 });
 
-const secret = "mySecret.";
-
-userSchema.plugin(encrypt, { secret: secret, encryptedFields: ["password"] });
+userSchema.plugin(encrypt, {
+  secret: process.env.SECRET,
+  encryptedFields: ["password"],
+});
 
 const User = new mongoose.model("User", userSchema);
 
@@ -64,6 +63,6 @@ app
     res.render("Secrets");
   });
 
-app.listen(PORT, () => {
-  console.log(`Server listening on port ${PORT}`);
+app.listen(process.env.PORT, () => {
+  console.log(`Server listening on port ${process.env.PORT}`);
 });
