@@ -1,6 +1,7 @@
 const express = require("express");
 const bodyParser = require("body-parser");
 const mongoose = require("mongoose");
+const encrypt = require("mongoose-encryption");
 
 const app = express();
 const PORT = 3000;
@@ -15,10 +16,14 @@ const uri =
 
 mongoose.connect(uri, { useNewUrlParser: true });
 
-const userSchema = {
+const userSchema = new mongoose.Schema({
   email: String,
   password: String,
-};
+});
+
+const secret = "mySecret.";
+
+userSchema.plugin(encrypt, { secret: secret, encryptedFields: ["password"] });
 
 const User = new mongoose.model("User", userSchema);
 
@@ -56,9 +61,9 @@ app
       password: req.body.password,
     });
     user.save();
-    console.log(req.body);
     res.render("Secrets");
   });
+
 app.listen(PORT, () => {
   console.log(`Server listening on port ${PORT}`);
 });
