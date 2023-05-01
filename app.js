@@ -1,7 +1,7 @@
 const express = require("express");
 const bodyParser = require("body-parser");
 const mongoose = require("mongoose");
-const md5 = require("md5");
+const bcrypt = require("bcrypt");
 const env = require("dotenv");
 
 const app = express();
@@ -33,12 +33,16 @@ app
   .post((req, res) => {
     User.findOne({ email: req.body.email }).then((user) => {
       if (!user) {
-        res.send("User not registered");
+        res.send("User not found");
       } else {
-        if (user.password === md5(req.body.password)) {
-          res.render("Secrets");
-        } else {
-          res.send("Incorrect Password");
+        if (user) {
+          bcrypt.compare(req.body.password, user.password, (e, result) => {
+            if (result === true) {
+              res.render("Secrets");
+            } else {
+              res.send("!Incorrect Password");
+            }
+          });
         }
       }
     });
@@ -50,12 +54,14 @@ app
     res.render("Register");
   })
   .post((req, res) => {
-    const user = new User({
-      email: req.body.email,
-      password: md5(req.body.password),
+    bcrypt.hash(req.body.password, 10, (e, hash) => {
+      const user = new User({
+        email: req.body.email,
+        password: hash,
+      });
+      user.save();
+      res.render("Secrets");
     });
-    user.save();
-    res.render("Secrets");
   });
 
 app.listen(process.env.PORT, () => {
